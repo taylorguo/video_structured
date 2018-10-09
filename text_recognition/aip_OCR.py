@@ -43,11 +43,11 @@ def aip_OCR(image, *options):
     # import Baidu face detection Python SDK client
     from aip import AipOcr
 
-    # create AipOCR client, create app in cloud.baidu.com
-    """ 上海寅诺管理咨询有限公司: video_ocr: APPID AK SK """
-    APP_ID = '14377678'
-    API_KEY = 'rR41uq8xv5VpRTpOgLFKuuMZ'
-    SECRET_KEY = 'UckxPOZ1GVHZMdt1N6EFsGlfE3AeyuCq'
+    # create AipOCR client, create app in https://console.bce.baidu.com
+    """ video_ocr: APPID AK SK """
+    APP_ID = '14383349'
+    API_KEY = 'DqkalpIwZISTZVGZt2z0vT7S'
+    SECRET_KEY = 'ZiEWAOwjUYLx9qVox6nxCBqBGVWTgVSN'
 
     client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
 
