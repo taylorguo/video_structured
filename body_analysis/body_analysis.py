@@ -15,7 +15,7 @@ Written by Guo Yufeng @ 2018.10.10
 from aip import AipBodyAnalysis
 
 # before create AipOCR client below, create app in cloud.baidu.com
-""" video_ocr: APPID AK SK """
+""" video_body_analysis: APPID AK SK """
 APP_ID = '14409622'
 API_KEY = 'nyNgj3XE8L25YVTEFaW5c2Lq'
 SECRET_KEY = 'xYuppHC7huURghiKofdiiSxXV92uka0g'

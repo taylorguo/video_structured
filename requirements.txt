@@ -1,10 +1,11 @@
-# 2018.10.10
 baidu-aip==2.2.8.0
 certifi==2018.8.24
 chardet==3.0.4
 Click==7.0
 cycler==0.10.0
 ffmpeg==1.2.1
+ffmpeg-python==0.1.16
+future==0.16.0
 h5py==2.8.0
 idna==2.7
 kiwisolver==1.0.1
@@ -12,6 +13,7 @@ matplotlib==3.0.0
 numpy==1.15.2
 opencv-python==3.4.3.18
 Pillow==5.2.0
+pymongo==3.7.1
 pyparsing==2.2.1
 python-dateutil==2.7.3
 requests==2.19.1
