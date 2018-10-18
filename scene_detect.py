@@ -2,30 +2,18 @@
 Scene Detection for video file in Python
 The main Scene Detection implemenetation.
 
-
 Licensed under the MIT License (see LICENSE for details)
 Written by Guo Yufeng @ 2018.09.30
 """
+
 #!/usr/bin/python
 # coding: UTF-8
 
-
-
-
 # Standard Library Imports
 from __future__ import print_function
-import logging
 import os
 import time
 import math
-from string import Template
-
-
-# Third-Party Library Imports
-
-import cv2
-from scenedetect.platform import tqdm
-
 
 ## https://github.com/Breakthrough/PySceneDetect
 import scenedetect
@@ -35,7 +23,7 @@ from scenedetect.frame_timecode import FrameTimecode
 from scenedetect.stats_manager import StatsManager
 from scenedetect.detectors import ContentDetector
 
-STATS_FILE_PATH = 'testvideo.stats.csv'
+# STATS_FILE_PATH = 'testvideo.stats.csv'
 
 def scene_detect(video):
     # Create a video_manager point to video file testvideo.mp4. Note that multiple
@@ -48,9 +36,8 @@ def scene_detect(video):
     # Add ContentDetector algorithm (constructor takes detector options like threshold).
     scene_manager.add_detector(ContentDetector())
     base_timecode = video_manager.get_base_timecode()
-    print(base_timecode)
 
-    print("****** create managers!")
+    print("****** 正在分析视频场景 ... create managers!")
 
     try:
         ### If stats file exists, load it.
@@ -59,10 +46,10 @@ def scene_detect(video):
         #     with open(STATS_FILE_PATH, 'r') as stats_file:
         #         stats_manager.load_from_csv(stats_file, base_timecode)
 
-        start_time = base_timecode + 0     # 00:00:00.667 -> 20
-        end_time = base_timecode + 300.0     # 00:00:20.000 -> 200
+        # start_time = base_timecode + 0     # 00:00:00.667 -> 20
+        # end_time = base_timecode + 300.0     # 00:00:20.000 -> 200
         # Set video_manager duration to read frames from 00:00:00 to 00:00:20.
-        video_manager.set_duration(start_time=start_time, end_time=end_time)
+        # video_manager.set_duration(start_time=start_time, end_time=end_time)
 
         # Set downscale factor to improve processing speed.
         video_manager.set_downscale_factor()
@@ -70,21 +57,23 @@ def scene_detect(video):
         # Start video_manager.
         video_manager.start()
 
-        # Perform scene detection on video_manager.
-        scene_manager.detect_scenes(frame_source=video_manager, end_time=end_time)
+        # Perform scene detection on video_manager. | , end_time=end_time
+        scene_manager.detect_scenes(frame_source=video_manager)
 
         # Obtain list of detected scenes.
         scene_list = scene_manager.get_scene_list(base_timecode)
         # Like FrameTimecodes, each scene in the scene_list can be sorted if the
         # list of scenes becomes unsorted.
-        print(scene_list)
 
         print('List of scenes obtained:')
-        for i, scene in enumerate(scene_list):
-            print('    Scene %2d: Start %s / Frame %d, End %s / Frame %d' % (
-                i+1,
-                scene[0].get_timecode(), scene[0].get_frames(),
-                scene[1].get_timecode(), scene[1].get_frames(),))
+        if scene_list:
+            for i, scene in enumerate(scene_list):
+                print('    Scene %2d: Start %s / Frame %d, End %s / Frame %d' % (
+                    i+1,
+                    scene[0].get_timecode(), scene[0].get_frames(),
+                    scene[1].get_timecode(), scene[1].get_frames(),))
+        else:
+            print('****** 视频是单一场景 ...  only 1 Scene in the video ')
 
         # ## We only write to the stats file if a save is required:
         # if stats_manager.is_save_required():
@@ -135,6 +124,20 @@ def get_output_file_path(file_path, output_dir=None):
     return file_path
 
 
+# ### Create folder to generate images
+def create_folder(video_name):
+    img_folder = video_name[0:-4]
+    isExists = os.path.exists(img_folder)
+    if not isExists:
+        os.makedirs(img_folder)
+        print('场景图片目录 ' + img_folder + ' 创建成功， 生成图片 ......')
+        return img_folder
+    else:
+        # 如果目录存在则不创建，并提示目录已存在
+        print(img_folder + ' 目录已存在')
+        return img_folder
+    return img_folder
+
 
 def generate_images(video_manager, scene_list, video_name,
                      image_name_template='$VIDEO_NAME-Scene-$SCENE_NUMBER-$IMAGE_NUMBER',
@@ -143,11 +146,7 @@ def generate_images(video_manager, scene_list, video_name,
     import cv2
     from string import Template
     from scenedetect.platform import tqdm
-
-    # type: (List[Tuple[FrameTimecode, FrameTimecode]) -> None
-
-    if not scene_list:
-        return
+    logging.getLogger().setLevel(logging.INFO)
 
     num_images = 2
     image_extension = "jpg"
@@ -163,6 +162,8 @@ def generate_images(video_manager, scene_list, video_name,
     video_manager.set_downscale_factor(1)
     video_manager.start()
 
+    print("Detect Scenes:", len(scene_list))
+
     # Setup flags and init progress bar if available.
     completed = True
     logging.info('Generating output images (%d per scene)...', num_images)
@@ -173,11 +174,11 @@ def generate_images(video_manager, scene_list, video_name,
 
     filename_template = Template(image_name_template)
 
-
-    scene_num_format = '%0'
-    scene_num_format += str(max(3, math.floor(math.log(len(scene_list), 10)) + 1)) + 'd'
-    image_num_format = '%0'
-    image_num_format += str(math.floor(math.log(num_images, 10)) + 2) + 'd'
+    if scene_list:
+        scene_num_format = '%0'
+        scene_num_format += str(max(3, math.floor(math.log(len(scene_list), 10)) + 1)) + 'd'
+        image_num_format = '%0'
+        image_num_format += str(math.floor(math.log(num_images, 10)) + 2) + 'd'
 
     timecode_list = dict()
 
@@ -205,20 +206,6 @@ def generate_images(video_manager, scene_list, video_name,
             # (one frame past the end), so we need to subtract 1 here.
             timecode_list[i].append(end_time - 1)
 
-    # ### Create folder to generate images
-    def create_folder(video_name):
-        img_folder = video_name[0:-4]
-        isExists = os.path.exists(img_folder)
-        if not isExists:
-            os.makedirs(img_folder)
-            print('场景图片目录 ' + img_folder + ' 创建成功， 生成图片 ......')
-            return img_folder
-        else:
-            # 如果目录存在则不创建，并提示目录已存在
-            print(img_folder + ' 目录已存在')
-            return img_folder
-        return img_folder
-    # ### output_dir=os.path.join(output_dir, img_folder))
 
     img_folder = create_folder(video_name)
 
@@ -236,24 +223,115 @@ def generate_images(video_manager, scene_list, video_name,
                             IMAGE_NUMBER=image_num_format % (j+1)
                         ), image_extension),
                         output_dir=os.path.join(os.path.dirname(os.path.realpath(__file__)), img_folder)), frame_im)
+                # return output_dir
             else:
                 completed = False
                 break
             if progress_bar:
                 progress_bar.update(1)
 
+
+    # type: (List[Tuple[FrameTimecode, FrameTimecode]) -> None
+
+    if not scene_list:
+
+        img_folder = create_folder(video_name)
+        video_manager.release()
+        video_manager.reset()
+        video_manager.set_downscale_factor(1)
+        video_manager.start()
+        video_manager.seek("00:00:02.000")
+        video_manager.grab()
+        ret_val, frame_im = video_manager.retrieve()
+        if ret_val:
+            cv2.imwrite(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                     img_folder,
+                                     video_name[0:-4]+"."+image_extension),
+                        frame_im)
+    #         return os.path.join(os.path.dirname(os.path.realpath(__file__)), img_folder, video_name[0:-4])
+
     if not completed:
         logging.error('Could not generate all output images.')
 
 
+
 if __name__ == "__main__":
-    import video_baseinfo
+
+    ###############  Set video file name   ###############
+
+    # VIDEO_PATH = "goldeneye.mp4"
     VIDEO_PATH = "2girls.mp4"
 
+    ###############  Video Base Information  ###############
+    # import video_baseinfo
+    from scene_detect.video_baseinfo import getBaseInfo
+    print("\n****** 视频文件信息分析： \n")
     print("%s -> video base information:"%VIDEO_PATH)
     print("***************************")
-    info = video_baseinfo.getBaseInfo(VIDEO_PATH)
+    info = getBaseInfo(VIDEO_PATH)
     print(info)
-    print("***************************")
+    print("***************************\n")
+
+    #################  Scene Detect & Split #################
     scene_detect(VIDEO_PATH)
 
+    #########################################################
+    #################  import Place Detect  #################
+    # from scene_util import get_files_name
+    from scene_detect.scene_util import get_files_name
+    print("\n****** 开始分析视频的场景： \n")
+    # get scene images
+    current_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), VIDEO_PATH[0:-4]+'/')
+    # print(current_path)
+    files = get_files_name(current_path)
+    print('****** 场景图片的数量:', len(files))
+
+    # call placeCNN_basic/places_predict() to predict place
+    from place365.run_placesCNN_basic import places_predict
+    from face_detection.face_detection import face_detection
+    from body_analysis.body_analysis import body_attribute, body_numbering, body_segmentation, pose_estimation, gesture_recognition, base64_2binaryimage
+    from text_recognition.aip_OCR import aip_OCR
+    import base64
+
+    # th architecture to use
+    arch = 'resnet18'
+    i=0
+    for file in files:
+        i = i + 1
+        file = os.path.join('./', VIDEO_PATH[0:-4], file)
+
+        #####################  Place Detect #####################
+        print('\n****** Scene %d prediction result:' % i)
+        places_predict(file, arch)
+
+        #################  Baidu AiP 5 functions #################
+        with open(file, 'rb') as f:
+            face_detection(str(base64.b64encode(f.read()),"utf-8"), "BASE64")
+
+        pose_result = pose_estimation(file)
+        print("人体关键点识别:", pose_result)
+
+        attr_result = body_attribute(file)
+        print("\n人体属性识别:", attr_result)
+
+        num_result = body_numbering(file)
+        print("\n人流量统计:", num_result)
+
+        ges_result = gesture_recognition(file)
+        print("\n手势识别:", ges_result)
+
+        seg_result = body_segmentation(file)
+        base64_2binaryimage(VIDEO_PATH[0:-4], seg_result)
+        print("\n人像分割:", seg_result, "\n分割图片已保存!")
+
+        ocr_result = aip_OCR(file)
+        print("\n识别出来的字幕是：", ocr_result)
+
+    ####################  Yolov3 Detect  ####################
+    print("\n****** 开始分析视频中的物体： \n")
+    from yolov3.yolov3_bridge import yolov3_detect, optparams
+    params = optparams(VIDEO_PATH[0:-4], 'output')
+    params.displayFolders()
+    yolov3_detect(params)
+
+    #########################################################
