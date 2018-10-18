@@ -73,4 +73,4 @@ Python 3.6 或以上版本，其他依赖项及其版本在 requirements.txt 有
 
 # 联系方式
 
-如有任何问题，请联络： 郭玉峰 at guoyufeng@innotechx.com
+如有任何问题，请联络： Taylor Guo at taylorguo@126.com
