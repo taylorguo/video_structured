@@ -10,7 +10,7 @@ h5py==2.8.0
 idna==2.7
 kiwisolver==1.0.1
 matplotlib==3.0.0
-numpy==1.15.2
+numpy==1.22.0
 opencv-python==3.4.3.18
 Pillow==5.2.0
 pymongo==3.7.1
